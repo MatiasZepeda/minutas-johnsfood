@@ -36,6 +36,16 @@ export default function EditorPage() {
 
   const college = colegio ? getCollege(colegio) : null;
 
+  // When college changes, immediately pre-load its template textos
+  // so the PDF button is always available even before the async API call resolves
+  const handleCollegeChange = (id: ColegioId) => {
+    const tmpl = getCollege(id);
+    if (tmpl) setTextosPie(tmpl.textosPie);
+    setDias({});
+    setCurrentMinuta(null);
+    setColegio(id);
+  };
+
   // Load existing minuta and check for previous one when colegio/mes/anio changes
   useEffect(() => {
     if (!colegio) return;
@@ -47,8 +57,8 @@ export default function EditorPage() {
       setShowDuplicatePrompt(false);
 
       try {
-        // Check if minuta already exists for this month
         const res = await fetch(`/api/minutas?colegio=${colegio}&anio=${anio}`);
+        if (!res.ok) throw new Error(`API error ${res.status}`);
         const list: Minuta[] = await res.json();
         const existing = list.find((m) => m.mes === mes && m.anio === anio);
 
@@ -56,24 +66,29 @@ export default function EditorPage() {
           setCurrentMinuta(existing);
           setDias(existing.dias as Record<string, DiaData>);
           setTextosPie(existing.textosPie as TextosPie);
-          setShowDuplicatePrompt(false);
         } else {
-          // No existing minuta — set defaults from college template
-          const tmpl = getCollege(colegio);
-          if (tmpl) setTextosPie(tmpl.textosPie);
+          // No saved minuta — reset dias but keep template textosPie
           setDias({});
-          setCurrentMinuta(null);
 
           // Check for a previous minuta to offer duplication
-          const prevRes = await fetch(
-            `/api/minutas/previo?colegio=${colegio}&mes=${mes}&anio=${anio}`
-          );
-          const prev = await prevRes.json();
-          if (prev) {
-            setPrevioMinuta(prev);
-            setShowDuplicatePrompt(true);
+          try {
+            const prevRes = await fetch(
+              `/api/minutas/previo?colegio=${colegio}&mes=${mes}&anio=${anio}`
+            );
+            if (prevRes.ok) {
+              const prev = await prevRes.json();
+              if (prev) {
+                setPrevioMinuta(prev);
+                setShowDuplicatePrompt(true);
+              }
+            }
+          } catch {
+            // previo is optional, ignore errors
           }
         }
+      } catch {
+        // API unavailable — keep the template textosPie that was set synchronously
+        setDias({});
       } finally {
         setLoadingMinuta(false);
       }
@@ -182,7 +197,7 @@ export default function EditorPage() {
           <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">
             1. Selecciona el colegio
           </h2>
-          <CollegeSelector value={colegio} onChange={setColegio} />
+          <CollegeSelector value={colegio} onChange={handleCollegeChange} />
         </section>
 
         {colegio && (
@@ -219,13 +234,18 @@ export default function EditorPage() {
 
             {/* Step 3: Grid */}
             <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
                 <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider">
                   3. Platos del mes — {MESES[mes - 1]} {anio}
                 </h2>
-                <p className="text-xs text-gray-400">
-                  {college?.menuRows.length} menús variables · {weeks.reduce((a, w) => a + w.days.length, 0)} días hábiles
-                </p>
+                <div className="flex items-center gap-3">
+                  <p className="text-xs text-gray-400">
+                    {college?.menuRows.length} menús variables · {weeks.reduce((a, w) => a + w.days.length, 0)} días hábiles
+                  </p>
+                  {ministaForPDF && college && (
+                    <PDFDownloadButton minuta={ministaForPDF} college={college} />
+                  )}
+                </div>
               </div>
 
               {loadingMinuta ? (
