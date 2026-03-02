@@ -10,19 +10,22 @@ import {
 import { Minuta, MenuRow, MENU_LABELS } from "@/lib/types";
 import { CollegeTemplate } from "@/lib/types";
 import { getBusinessWeeks, getMesLabel } from "@/lib/calendar";
+import path from "path";
 
-// ─── Custom fonts ────────────────────────────────────────────────────────────
+// ─── Custom fonts (local TTF — @react-pdf/renderer does not support WOFF2) ──
 // Playfair Display → elegant serif for headers
 // Lato → modern, readable sans-serif for body
+const fontsDir = path.join(process.cwd(), "public", "fonts");
+
 Font.register({
   family: "Playfair",
   fonts: [
     {
-      src: "https://fonts.gstatic.com/s/playfairdisplay/v37/nuFiD-vYSZviVYUb_rj3ij__anPXDTnohkk73g.woff2",
+      src: path.join(fontsDir, "PlayfairDisplay-Bold.ttf"),
       fontWeight: 700,
     },
     {
-      src: "https://fonts.gstatic.com/s/playfairdisplay/v37/nuFiD-vYSZviVYUb_rj3ij__anPXJzrohkk73g.woff2",
+      src: path.join(fontsDir, "PlayfairDisplay-ExtraBold.ttf"),
       fontWeight: 900,
     },
   ],
@@ -32,15 +35,15 @@ Font.register({
   family: "Lato",
   fonts: [
     {
-      src: "https://fonts.gstatic.com/s/lato/v24/S6uyw4BMUTPHjx4wWw.woff2",
+      src: path.join(fontsDir, "Lato-Regular.ttf"),
       fontWeight: 400,
     },
     {
-      src: "https://fonts.gstatic.com/s/lato/v24/S6u9w4BMUTPHh6UVSwiPGQ.woff2",
+      src: path.join(fontsDir, "Lato-Bold.ttf"),
       fontWeight: 700,
     },
     {
-      src: "https://fonts.gstatic.com/s/lato/v24/S6u8w4BMUTPHjxsAXC-v.woff2",
+      src: path.join(fontsDir, "Lato-Italic.ttf"),
       fontWeight: 400,
       fontStyle: "italic",
     },
