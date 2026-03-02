@@ -6,9 +6,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const minuta = await prisma.minuta.findUnique({ where: { id } });
-  if (!minuta) return NextResponse.json({ error: "No encontrada" }, { status: 404 });
-  return NextResponse.json(minuta);
+  try {
+    const minuta = await prisma.minuta.findUnique({ where: { id } });
+    if (!minuta) return NextResponse.json({ error: "No encontrada" }, { status: 404 });
+    return NextResponse.json(minuta);
+  } catch (err) {
+    console.error("[GET /api/minutas/:id]", err);
+    return NextResponse.json({ error: "DB_ERROR" }, { status: 503 });
+  }
 }
 
 export async function PUT(
@@ -19,12 +24,17 @@ export async function PUT(
   const body = await req.json();
   const { dias, textosPie } = body;
 
-  const minuta = await prisma.minuta.update({
-    where: { id },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data: { dias: dias as any, textosPie: textosPie as any },
-  });
-  return NextResponse.json(minuta);
+  try {
+    const minuta = await prisma.minuta.update({
+      where: { id },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { dias: dias as any, textosPie: textosPie as any },
+    });
+    return NextResponse.json(minuta);
+  } catch (err) {
+    console.error("[PUT /api/minutas/:id]", err);
+    return NextResponse.json({ error: "DB_ERROR" }, { status: 503 });
+  }
 }
 
 export async function DELETE(
@@ -32,6 +42,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  await prisma.minuta.delete({ where: { id } });
-  return NextResponse.json({ ok: true });
+  try {
+    await prisma.minuta.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[DELETE /api/minutas/:id]", err);
+    return NextResponse.json({ error: "DB_ERROR" }, { status: 503 });
+  }
 }
