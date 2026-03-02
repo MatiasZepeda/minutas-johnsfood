@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model Minuta {
+  id        String   @id @default(cuid())
+  colegio   String
+  mes       Int
+  anio      Int
+  dias      Json
+  textosPie Json
+  creadoEn  DateTime @default(now())
+  editadoEn DateTime @updatedAt
+
+  @@unique([colegio, mes, anio])
+}
