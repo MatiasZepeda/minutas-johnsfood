@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { renderToStream } from "@react-pdf/renderer";
+import { renderToBuffer } from "@react-pdf/renderer";
 import { createElement } from "react";
 import path from "path";
 import { MinutaPDF } from "@/components/pdf/MinutaPDF";
@@ -16,7 +16,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Colegio no válido" }, { status: 400 });
   }
 
-  // Use absolute filesystem paths for server-side image loading
   const publicDir = path.join(process.cwd(), "public");
   const logoJohnsFoodSrc = path.join(publicDir, "logos", "johns-food.png");
   const logoCollegeSrc = path.join(
@@ -31,27 +30,23 @@ export async function POST(req: NextRequest) {
     logoCollegeSrc,
   });
 
-  // renderToStream returns a Node.js ReadableStream
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const stream = await renderToStream(element as any);
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const buffer = await renderToBuffer(element as any);
+    const mesLabel = getMesLabel(minuta.mes);
+    const fileName = `Minuta_${college.nombre.replace(/\s+/g, "_")}_${mesLabel}_${minuta.anio}.pdf`;
 
-  const chunks: Buffer[] = [];
-  await new Promise<void>((resolve, reject) => {
-    (stream as unknown as NodeJS.ReadableStream).on("data", (chunk: Buffer) =>
-      chunks.push(Buffer.from(chunk))
+    return new NextResponse(new Uint8Array(buffer), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${fileName}"`,
+      },
+    });
+  } catch (err) {
+    console.error("[POST /api/pdf] Error generating PDF:", err);
+    return NextResponse.json(
+      { error: "PDF_ERROR", message: String(err) },
+      { status: 500 }
     );
-    (stream as unknown as NodeJS.ReadableStream).on("end", resolve);
-    (stream as unknown as NodeJS.ReadableStream).on("error", reject);
-  });
-
-  const buffer = Buffer.concat(chunks);
-  const mesLabel = getMesLabel(minuta.mes);
-  const fileName = `Minuta_${college.nombre.replace(/\s+/g, "_")}_${mesLabel}_${minuta.anio}.pdf`;
-
-  return new NextResponse(buffer, {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${fileName}"`,
-    },
-  });
+  }
 }

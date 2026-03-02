@@ -13,20 +13,20 @@ import { getBusinessWeeks, getMesLabel } from "@/lib/calendar";
 import path from "path";
 
 // ─── Custom fonts (local TTF — @react-pdf/renderer does not support WOFF2) ──
-// Playfair Display → elegant serif for headers
-// Lato → modern, readable sans-serif for body
+// Crimson Text → elegant serif for headers/titles
+// Lato         → modern, readable sans-serif for body
 const fontsDir = path.join(process.cwd(), "public", "fonts");
 
 Font.register({
-  family: "Playfair",
+  family: "Crimson",
   fonts: [
     {
-      src: path.join(fontsDir, "PlayfairDisplay-Bold.ttf"),
-      fontWeight: 700,
+      src: path.join(fontsDir, "CrimsonText-SemiBold.ttf"),
+      fontWeight: 600,
     },
     {
-      src: path.join(fontsDir, "PlayfairDisplay-ExtraBold.ttf"),
-      fontWeight: 900,
+      src: path.join(fontsDir, "CrimsonText-Bold.ttf"),
+      fontWeight: 700,
     },
   ],
 });
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 11,
-    fontFamily: "Playfair",
+    fontFamily: "Crimson",
     fontWeight: 700,
     color: C.navy,
     textAlign: "center",
@@ -122,8 +122,8 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 16,
-    fontFamily: "Playfair",
-    fontWeight: 900,
+    fontFamily: "Crimson",
+    fontWeight: 700,
     color: C.accent,
     textAlign: "center",
     marginTop: 2,
